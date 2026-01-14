@@ -5,6 +5,8 @@
 # HTML title tag content
 title = "scorecounter"
 
+base_path = "/scorecounter/"
+
 # include `assets` in web platform
 [web.resource]
 
