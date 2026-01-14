@@ -9,13 +9,13 @@ title = "scorecounter"
 [web.resource]
 
 # Additional CSS style files
-style = []
+style = ["/assets/main.css"]
 
 # Additional JavaScript files
-script = []
+script = ["/assets/sw-register.js"]
 
 [web.resource.dev]
 
 # Javascript code file
 # serve: [dev-server] only
-script = []
+script = ["/assets/sw-register.js"]

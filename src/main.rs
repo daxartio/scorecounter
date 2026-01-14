@@ -1,3 +1,8 @@
+mod app;
+mod state;
+
+use app::App;
+
 fn main() {
-    println!("Hello, world!");
+    dioxus::launch(App);
 }
