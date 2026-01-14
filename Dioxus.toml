@@ -14,10 +14,10 @@ base_path = "/scorecounter/"
 style = ["/assets/main.css"]
 
 # Additional JavaScript files
-script = ["/assets/sw-register.js"]
+script = ["/assets/sw-register.js", "/assets/interaction.js"]
 
 [web.resource.dev]
 
 # Javascript code file
 # serve: [dev-server] only
-script = ["/assets/sw-register.js"]
+script = ["/assets/sw-register.js", "/assets/interaction.js"]

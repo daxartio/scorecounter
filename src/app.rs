@@ -1,6 +1,5 @@
 use crate::state::{Counter, SCHEMA_VERSION, STORAGE_KEY, Store, StoredData};
 use dioxus::prelude::*;
-use dioxus::router::{Routable, Router};
 use js_sys::Date;
 use uuid::Uuid;
 use web_sys::wasm_bindgen::JsCast;
@@ -12,12 +11,10 @@ const PALETTE: [&str; 8] = [
     "#0f172a", "#1e3a8a", "#047857", "#9d174d", "#7c3aed", "#ea580c", "#2563eb", "#0f766e",
 ];
 
-#[derive(Routable, Clone, PartialEq)]
-enum Route {
-    #[route("/")]
-    Home {},
-    #[route("/settings")]
-    Settings {},
+#[derive(Clone, Copy, PartialEq)]
+enum Page {
+    Home,
+    Settings,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -66,24 +63,15 @@ impl CounterDraft {
 
 #[component]
 pub fn App() -> Element {
-    use_effect(|| {
-        disable_zoom();
-    });
-
-    rsx! {
-        document::Stylesheet { href: asset!("/assets/main.css") }
-        document::Link { rel: "manifest", href: asset!("/assets/manifest.webmanifest") }
-        document::Script { src: asset!("/assets/sw-register.js") }
-        Router::<Route> {}
-    }
-}
-
-#[component]
-fn Home() -> Element {
     let store = use_signal(Store::default);
     let loaded = use_signal(|| false);
     let mut dialog = use_signal(|| DialogState::Closed);
     let next_palette = use_signal(|| 0usize);
+    let mut page = use_signal(|| Page::Home);
+
+    use_effect(|| {
+        disable_zoom();
+    });
 
     use_effect({
         let store = store.clone();
@@ -144,38 +132,58 @@ fn Home() -> Element {
     };
 
     rsx! {
-        main {
-            class: "app",
+        document::Stylesheet { href: asset!("/assets/main.css") }
+        document::Link { rel: "manifest", href: asset!("/assets/manifest.webmanifest") }
+        document::Script { src: asset!("/assets/sw-register.js") }
+        main { class: "app",
             div { class: "topbar",
-                a { class: "nav-link", href: "/settings", "Settings" }
-            }
-            div { class: "rows",
-                style: "height: 100vh;",
-                if counters.is_empty() {
-                    PlaceholderRow { height: row_height.clone(), message: "No counters yet. Scroll down to add." }
+                if page() == Page::Home {
+                    button {
+                        class: "nav-link",
+                        r#type: "button",
+                        onclick: move |_| page.set(Page::Settings),
+                        "Settings"
+                    }
                 } else {
-                    for counter in counters {
-                        ScoreRow {
-                            counter,
-                            total: total_rows,
-                            row_height: row_height.clone(),
-                            on_edit: move |id| {
-                                let state = store.read();
-                                if let Some(current) = state.counters.iter().find(|c| c.id == id) {
-                                    dialog.set(DialogState::Edit(CounterDraft::from_counter(current)));
-                                }
-                            },
-                            on_delete: move |id| handle_delete(id),
-                            on_adjust: {
-                                let mut store = store.clone();
-                                move |(id, delta): (String, i32)| {
-                                    let _ = store.with_mut(|s| s.adjust_score(&id, delta));
-                                }
-                            },
-                        }
+                    button {
+                        class: "nav-link",
+                        r#type: "button",
+                        onclick: move |_| page.set(Page::Home),
+                        "Back"
                     }
                 }
-                AddRow { height: ADD_ROW_HEIGHT.to_string(), on_add: move |_| open_add() }
+            }
+            if page() == Page::Home {
+                div { class: "rows",
+                    style: "height: 100vh;",
+                    if counters.is_empty() {
+                        PlaceholderRow { height: row_height.clone(), message: "No counters yet. Scroll down to add." }
+                    } else {
+                        for counter in counters {
+                            ScoreRow {
+                                counter,
+                                total: total_rows,
+                                row_height: row_height.clone(),
+                                on_edit: move |id| {
+                                    let state = store.read();
+                                    if let Some(current) = state.counters.iter().find(|c| c.id == id) {
+                                        dialog.set(DialogState::Edit(CounterDraft::from_counter(current)));
+                                    }
+                                },
+                                on_delete: move |id| handle_delete(id),
+                                on_adjust: {
+                                    let mut store = store.clone();
+                                    move |(id, delta): (String, i32)| {
+                                        let _ = store.with_mut(|s| s.adjust_score(&id, delta));
+                                    }
+                                },
+                            }
+                        }
+                    }
+                    AddRow { height: ADD_ROW_HEIGHT.to_string(), on_add: move |_| open_add() }
+                }
+            } else {
+                SettingsView { }
             }
             if let DialogState::Add(form) = dialog() {
                 RowDialog {
@@ -209,12 +217,9 @@ fn Home() -> Element {
 }
 
 #[component]
-fn Settings() -> Element {
+fn SettingsView() -> Element {
     rsx! {
         main { class: "settings",
-            div { class: "topbar",
-                a { class: "nav-link", href: "/", "Back" }
-            }
             div { class: "settings-card",
                 div { class: "branding",
                     span { class: "dot" }
