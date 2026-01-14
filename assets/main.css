@@ -28,65 +28,43 @@ main.app {
     overflow: hidden;
 }
 
-.hud {
-    position: fixed;
-    top: 14px;
-    left: 14px;
-    right: 14px;
+.topbar {
+    position: sticky;
+    top: 0;
     display: flex;
+    justify-content: flex-end;
     align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    z-index: 12;
-    pointer-events: none;
-}
-
-.hud .branding {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 14px;
-    background: var(--surface);
-    border: 1px solid var(--stroke);
-    border-radius: 14px;
+    padding: 12px 14px;
+    z-index: 10;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0) 100%);
     backdrop-filter: blur(8px);
-    box-shadow: var(--shadow);
-    pointer-events: auto;
 }
 
-.branding .dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #22d3ee, #a855f7);
-    box-shadow: 0 0 0 6px rgba(168, 85, 247, 0.12);
-}
-
-.branding h1 {
-    margin: 0;
-    font-size: 16px;
-    letter-spacing: 0.4px;
-}
-
-.branding p {
-    margin: 0;
-    color: var(--text-muted);
-    font-size: 12px;
-}
-
-.hud .summary {
-    background: var(--surface);
+.nav-link {
     border: 1px solid var(--stroke);
-    padding: 8px 12px;
+    padding: 9px 12px;
     border-radius: 12px;
     color: var(--text-muted);
-    pointer-events: auto;
+    text-decoration: none;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.04);
+    transition: border-color 0.12s ease, color 0.12s ease, transform 0.12s ease;
+}
+
+.nav-link:hover {
+    border-color: rgba(34, 211, 238, 0.7);
+    color: #e0f2fe;
+    transform: translateY(-1px);
+}
+
+.nav-link:active {
+    transform: translateY(0);
 }
 
 .rows {
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    min-height: 100vh;
     overflow-y: auto;
 }
 
@@ -101,7 +79,7 @@ main.app {
 
 .row-actions {
     position: absolute;
-    top: 12px;
+    top: 10px;
     right: 12px;
     display: flex;
     gap: 8px;
@@ -143,9 +121,9 @@ main.app {
 }
 
 .pill {
-    width: 72px;
-    height: 72px;
-    border-radius: 36px;
+    width: 70px;
+    height: 70px;
+    border-radius: 35px;
     border: 1px solid rgba(255, 255, 255, 0.12);
     background: var(--pill);
     color: #f8fafc;
@@ -208,52 +186,39 @@ main.app {
     letter-spacing: 0.03em;
 }
 
-.fab {
-    position: fixed;
-    right: 18px;
-    bottom: 22px;
-    border: none;
-    background: linear-gradient(135deg, #22d3ee, #a855f7);
-    color: #0b1020;
-    padding: 14px 18px;
-    font-weight: 800;
-    font-size: 14px;
-    border-radius: 18px;
-    box-shadow: 0 16px 45px rgba(168, 85, 247, 0.36);
+.add-row {
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+    border-top: 1px dashed rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.7;
+}
+
+.add-row-button {
+    border: 1px dashed rgba(255, 255, 255, 0.25);
+    background: transparent;
+    color: var(--text-muted);
+    padding: 12px 16px;
+    border-radius: 14px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
     cursor: pointer;
-    transition: transform 0.12s ease, box-shadow 0.12s ease;
-    z-index: 14;
+    transition: border-color 0.12s ease, color 0.12s ease, transform 0.12s ease;
 }
 
-.fab:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 18px 60px rgba(168, 85, 247, 0.46);
+.add-row-button:hover {
+    color: #f8fafc;
+    border-color: rgba(34, 211, 238, 0.7);
+    transform: translateY(-1px);
 }
 
-.fab:active {
+.add-row-button:active {
     transform: translateY(0);
 }
 
-.empty {
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    background: radial-gradient(circle at 30% 30%, rgba(34, 211, 238, 0.12), transparent 40%),
-        radial-gradient(circle at 80% 20%, rgba(168, 85, 247, 0.12), transparent 38%),
-        var(--bg);
-}
-
-.empty h2 {
-    margin: 0;
-    font-size: 28px;
-}
-
-.empty p {
-    margin: 0;
+.placeholder-row {
+    background: rgba(255, 255, 255, 0.02);
     color: var(--text-muted);
 }
 
@@ -386,6 +351,30 @@ button.ghost {
 button.danger {
     border-color: rgba(248, 113, 113, 0.6);
     color: #fecdd3;
+}
+
+.settings {
+    min-height: 100vh;
+    padding: 12px;
+}
+
+.settings-card {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 18px;
+    background: var(--surface);
+    border: 1px solid var(--stroke);
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.settings-card ul {
+    margin: 8px 0 0 18px;
+    color: var(--text-muted);
+    line-height: 1.6;
 }
 
 @media (max-width: 640px) {

@@ -1,13 +1,24 @@
 use crate::state::{Counter, SCHEMA_VERSION, STORAGE_KEY, Store, StoredData};
 use dioxus::prelude::*;
+use dioxus::router::{Routable, Router};
 use js_sys::Date;
 use uuid::Uuid;
+use web_sys::wasm_bindgen::JsCast;
 
 const LONG_PRESS_THRESHOLD_MS: f64 = 520.0;
 const MIN_ROW_HEIGHT_PX: f32 = 96.0;
+const ADD_ROW_HEIGHT: &str = "clamp(96px, 18vh, 160px)";
 const PALETTE: [&str; 8] = [
     "#0f172a", "#1e3a8a", "#047857", "#9d174d", "#7c3aed", "#ea580c", "#2563eb", "#0f766e",
 ];
+
+#[derive(Routable, Clone, PartialEq)]
+enum Route {
+    #[route("/")]
+    Home {},
+    #[route("/settings")]
+    Settings {},
+}
 
 #[derive(Clone, Debug, PartialEq)]
 enum DialogState {
@@ -55,6 +66,20 @@ impl CounterDraft {
 
 #[component]
 pub fn App() -> Element {
+    use_effect(|| {
+        disable_zoom();
+    });
+
+    rsx! {
+        document::Stylesheet { href: asset!("/assets/main.css") }
+        document::Link { rel: "manifest", href: asset!("/assets/manifest.webmanifest") }
+        document::Script { src: asset!("/assets/sw-register.js") }
+        Router::<Route> {}
+    }
+}
+
+#[component]
+fn Home() -> Element {
     let store = use_signal(Store::default);
     let loaded = use_signal(|| false);
     let mut dialog = use_signal(|| DialogState::Closed);
@@ -119,26 +144,16 @@ pub fn App() -> Element {
     };
 
     rsx! {
-        document::Stylesheet { href: asset!("/assets/main.css") }
-        document::Link { rel: "manifest", href: asset!("/assets/manifest.webmanifest") }
-        document::Script { src: asset!("/assets/sw-register.js") }
         main {
             class: "app",
-            div { class: "hud",
-                div { class: "branding",
-                    span { class: "dot" }
-                    h1 { "Score Counter" }
-                    p { "Press to adjust, hold for quick +5/-5." }
-                }
-                div { class: "summary",
-                    span { "{total_rows} counters" }
-                }
+            div { class: "topbar",
+                a { class: "nav-link", href: "/settings", "Settings" }
             }
-            if counters.is_empty() {
-                EmptyState { on_add: move |_| open_add() }
-            } else {
-                div { class: "rows",
-                    style: "height: 100vh;",
+            div { class: "rows",
+                style: "height: 100vh;",
+                if counters.is_empty() {
+                    PlaceholderRow { height: row_height.clone(), message: "No counters yet. Scroll down to add." }
+                } else {
                     for counter in counters {
                         ScoreRow {
                             counter,
@@ -160,8 +175,8 @@ pub fn App() -> Element {
                         }
                     }
                 }
+                AddRow { height: ADD_ROW_HEIGHT.to_string(), on_add: move |_| open_add() }
             }
-            AddButton { on_click: move |_| open_add() }
             if let DialogState::Add(form) = dialog() {
                 RowDialog {
                     title: "Add counter".to_string(),
@@ -187,6 +202,33 @@ pub fn App() -> Element {
                         }
                     },
                     form,
+                }
+            }
+        }
+    }
+}
+
+#[component]
+fn Settings() -> Element {
+    rsx! {
+        main { class: "settings",
+            div { class: "topbar",
+                a { class: "nav-link", href: "/", "Back" }
+            }
+            div { class: "settings-card",
+                div { class: "branding",
+                    span { class: "dot" }
+                    h1 { "Score Counter" }
+                    p { "Press ± to change scores; hold for quick ±5." }
+                }
+                section {
+                    h2 { "How it works" }
+                    ul {
+                        li { "Tap + or - for ±1, hold ~0.5s for ±5." }
+                        li { "Each row is a player; edit to rename, recolor, or set score." }
+                        li { "Data lives offline in your browser storage; safe to close or go offline." }
+                        li { "Scroll to the faint row at the bottom to add more counters." }
+                    }
                 }
             }
         }
@@ -443,13 +485,25 @@ fn RowDialog(
 }
 
 #[component]
-fn EmptyState(on_add: EventHandler<()>) -> Element {
+fn PlaceholderRow(height: String, message: String) -> Element {
     rsx! {
-        div { class: "empty",
-            h2 { "No counters yet" }
-            p { "Create your first row to start tracking scores." }
+        div { class: "row placeholder-row", style: format!("height: {height};"),
+            div { class: "row-content",
+                div { class: "center",
+                    span { class: "name", "{message}" }
+                    span { class: "hint", "Scroll down for the add row." }
+                }
+            }
+        }
+    }
+}
+
+#[component]
+fn AddRow(height: String, on_add: EventHandler<()>) -> Element {
+    rsx! {
+        div { class: "row add-row", style: format!("height: {height};"),
             button {
-                class: "primary",
+                class: "add-row-button",
                 r#type: "button",
                 onclick: move |_| on_add.call(()),
                 "+ Add counter"
@@ -458,14 +512,26 @@ fn EmptyState(on_add: EventHandler<()>) -> Element {
     }
 }
 
-#[component]
-fn AddButton(on_click: EventHandler<()>) -> Element {
-    rsx! {
-        button {
-            class: "fab",
-            r#type: "button",
-            onclick: move |_| on_click.call(()),
-            "+ Add"
+fn disable_zoom() {
+    if let Some(window) = web_sys::window() {
+        if let Some(document) = window.document() {
+            if let Some(head) = document.head() {
+                let meta: Option<web_sys::HtmlMetaElement> = document
+                    .query_selector("meta[name=viewport]")
+                    .ok()
+                    .flatten()
+                    .and_then(|el| el.dyn_into::<web_sys::HtmlMetaElement>().ok())
+                    .or_else(|| {
+                        let element = document.create_element("meta").ok()?;
+                        element.set_attribute("name", "viewport").ok()?;
+                        head.append_child(&element).ok()?;
+                        element.dyn_into::<web_sys::HtmlMetaElement>().ok()
+                    });
+
+                if let Some(meta) = meta {
+                    meta.set_content("width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no");
+                }
+            }
         }
     }
 }
