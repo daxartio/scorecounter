@@ -133,6 +133,13 @@ pub fn App() -> Element {
 
     rsx! {
         document::Stylesheet { href: asset!("/assets/main.css") }
+        document::Meta { name: "theme-color", content: "#0f172a" }
+        document::Meta { name: "application-name", content: "Score Counter" }
+        document::Meta { name: "apple-mobile-web-app-capable", content: "yes" }
+        document::Meta { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" }
+        document::Meta { name: "apple-mobile-web-app-title", content: "Score Counter" }
+        document::Link { rel: "apple-touch-icon", sizes: "180x180", href: asset!("/assets/apple-touch-icon.png") }
+        document::Link { rel: "icon", sizes: "192x192", href: asset!("/assets/icon-192.png"), r#type: "image/png" }
         document::Link { rel: "manifest", href: asset!("/assets/manifest.webmanifest") }
         document::Script { src: asset!("/assets/sw-register.js") }
         main { class: "app",
