@@ -1,0 +1,25 @@
+{
+    "id": "/scorecounter/",
+    "name": "Score Counter",
+    "short_name": "Scores",
+    "description": "Offline-first score tracker with long-press adjustments and local storage.",
+    "start_url": "/scorecounter/",
+    "scope": "/scorecounter/",
+    "display": "standalone",
+    "background_color": "#05070f",
+    "theme_color": "#0f172a",
+    "icons": [
+        {
+            "src": "/scorecounter/assets/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/scorecounter/assets/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ]
+}
